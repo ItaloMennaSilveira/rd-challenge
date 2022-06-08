@@ -4,6 +4,8 @@ require 'minitest/autorun'
 require 'timeout'
 
 class CustomerSuccessBalancing
+  MAX_CUSTOMERS_WITH_SAME_SCORE = 1
+
   def initialize(customer_success, customers, away_customer_success)
     @customer_success = customer_success
     @customers = customers
@@ -12,26 +14,26 @@ class CustomerSuccessBalancing
 
   # Returns the ID of the customer success with most customers
   def execute
-    cs_with_customers_scores = associate_customer_score_to_cs
+    customers_scores_by_cs = group_customers_scores_by_cs
 
-    find_cs_id_with_more_customers(cs_with_customers_scores)
+    find_cs_id_with_more_customers(customers_scores_by_cs)
   end
 
   private
 
-  def associate_customer_score_to_cs
+  def group_customers_scores_by_cs
     delete_cs_away
     @customer_success.sort_by! { |cs| cs[:score] }
-    cs_with_customers_scores = Hash[@customer_success.map { |cs| [cs, []] }]
+    customers_scores_by_cs = Hash[@customer_success.map { |cs| [cs, []] }]
 
     @customers.each do |customer|
-      cs_scores = cs_with_customers_scores[
+      customers_scores = customers_scores_by_cs[
         @customer_success.find { |cs| customer[:score] <= cs[:score] }
       ]
-      cs_scores&.push(customer[:score])
+      customers_scores&.push(customer[:score])
     end
 
-    cs_with_customers_scores
+    customers_scores_by_cs
   end
 
   def delete_cs_away
@@ -40,24 +42,25 @@ class CustomerSuccessBalancing
     end
   end
 
-  def find_cs_id_with_more_customers(cs_with_customers_scores)
-    total_of_customers_by_cs_id = total_of_customers_by_cs_id(cs_with_customers_scores)
+  def find_cs_id_with_more_customers(customers_scores_by_cs)
+    total_of_customers_by_cs_id = total_of_customers_by_cs_id(customers_scores_by_cs)
     cs_id_with_more_customers = cs_id_with_more_customers(total_of_customers_by_cs_id)
-    total_of_scores = total_of_customers_by_cs_id[cs_id_with_more_customers]
+    highest_total_of_customers_scores = total_of_customers_by_cs_id[cs_id_with_more_customers]
 
-    return 0 if total_of_scores.zero? || draw_between_cs?(total_of_customers_by_cs_id, total_of_scores)
+    return 0 if highest_total_of_customers_scores.zero? ||
+                draw_between_cs?(total_of_customers_by_cs_id, highest_total_of_customers_scores)
 
     cs_id_with_more_customers
   end
 
-  def draw_between_cs?(total_of_customers_by_cs_id, total_of_scores)
-    total_of_customers_by_cs_id.values.count(total_of_scores) >= 2
+  def draw_between_cs?(total_of_customers_by_cs_id, highest_total_of_customers_scores)
+    total_of_customers_by_cs_id.values.count(highest_total_of_customers_scores) > MAX_CUSTOMERS_WITH_SAME_SCORE
   end
 
-  def total_of_customers_by_cs_id(cs_with_customers_scores)
+  def total_of_customers_by_cs_id(customers_scores_by_cs)
     total_of_customers_by_cs_id = {}
 
-    cs_with_customers_scores.each do |cs, customers_score|
+    customers_scores_by_cs.each do |cs, customers_score|
       total_of_customers_by_cs_id[cs[:id]] = customers_score.count
     end
 
