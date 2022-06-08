@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'minitest/autorun'
 require 'timeout'
 
@@ -99,7 +101,7 @@ class CustomerSuccessBalancingTests < Minitest::Test
   def test_scenario_three
     balancer = CustomerSuccessBalancing.new(
       build_scores(Array(1..999)),
-      build_scores(Array.new(10000, 998)),
+      build_scores(Array.new(10_000, 998)),
       [999]
     )
     result = Timeout.timeout(1.0) { balancer.execute }
