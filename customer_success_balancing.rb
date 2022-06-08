@@ -23,7 +23,9 @@ class CustomerSuccessBalancing
     cs_with_customers_scores = Hash[@customer_success.map { |cs| [cs, []] }]
 
     @customers.each do |customer|
-      cs_scores = cs_with_customers_scores[@customer_success.find { |cs| customer[:score] <= cs[:score] }]
+      cs_scores = cs_with_customers_scores[
+        @customer_success.find { |cs| customer[:score] <= cs[:score] }
+      ]
       cs_scores&.push(customer[:score])
     end
 
@@ -37,30 +39,41 @@ class CustomerSuccessBalancing
   end
 
   def find_cs_id_with_more_customers(cs_with_customers_scores)
+    total_of_customers_by_cs_id = total_of_customers_by_cs_id(cs_with_customers_scores)
+    cs_id_with_more_customers = cs_id_with_more_customers(total_of_customers_by_cs_id)
+    total_of_scores = total_of_customers_by_cs_id[cs_id_with_more_customers]
+
+    return 0 if total_of_scores.zero? || draw_between_cs?(total_of_customers_by_cs_id, total_of_scores)
+
+    cs_id_with_more_customers
+  end
+
+  def draw_between_cs?(total_of_customers_by_cs_id, total_of_scores)
+    total_of_customers_by_cs_id.values.count(total_of_scores) >= 2
+  end
+
+  def total_of_customers_by_cs_id(cs_with_customers_scores)
     total_of_customers_by_cs_id = {}
 
     cs_with_customers_scores.each do |cs, customers_score|
       total_of_customers_by_cs_id[cs[:id]] = customers_score.count
     end
 
+    total_of_customers_by_cs_id
+  end
+
+  def cs_id_with_more_customers(total_of_customers_by_cs_id)
     customers_count = 0
-    last_customer_id = nil
+    customer_id = nil
+
     total_of_customers_by_cs_id.each do |cs_id, total_of_costumers|
       if total_of_costumers >= customers_count
-        last_customer_id = cs_id
+        customer_id = cs_id
         customers_count = total_of_costumers
       end
     end
 
-    total_of_scores = total_of_customers_by_cs_id[last_customer_id]
-
-    return 0 if total_of_scores.zero? || draw_between_cs?(total_of_customers_by_cs_id, total_of_scores)
-
-    last_customer_id
-  end
-
-  def draw_between_cs?(total_of_customers_by_cs_id, total_of_scores)
-    total_of_customers_by_cs_id.values.count(total_of_scores) >= 2
+    customer_id
   end
 end
 
