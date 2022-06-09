@@ -148,6 +148,60 @@ class CustomerSuccessBalancingTests < Minitest::Test
     assert_equal 3, balancer.execute
   end
 
+  def test_scenario_eight
+    balancer = CustomerSuccessBalancing.new(
+      build_scores([]),
+      build_scores([10, 20, 30]),
+      []
+    )
+    assert_equal 0, balancer.execute
+  end
+
+  def test_scenario_nine
+    balancer = CustomerSuccessBalancing.new(
+      build_scores([]),
+      build_scores([10, 20, 30]),
+      [1, 2, 3]
+    )
+    assert_equal 0, balancer.execute
+  end
+
+  def test_scenario_ten
+    balancer = CustomerSuccessBalancing.new(
+      build_scores([10]),
+      build_scores([11, 12, 13]),
+      []
+    )
+    assert_equal 0, balancer.execute
+  end
+
+  def test_scenario_eleven
+    balancer = CustomerSuccessBalancing.new(
+      build_scores([10]),
+      build_scores([9, 8, 7]),
+      [1]
+    )
+    assert_equal 0, balancer.execute
+  end
+
+  def test_scenario_twelve
+    balancer = CustomerSuccessBalancing.new(
+      build_scores([10]),
+      build_scores([9, 8, 7]),
+      []
+    )
+    assert_equal 1, balancer.execute
+  end
+
+  def test_scenario_thirteen
+    balancer = CustomerSuccessBalancing.new(
+      build_scores([]),
+      build_scores([]),
+      []
+    )
+    assert_equal 0, balancer.execute
+  end
+
   private
 
   def build_scores(scores)
