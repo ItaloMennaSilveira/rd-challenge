@@ -47,7 +47,8 @@ class CustomerSuccessBalancing
     cs_id_with_more_customers = cs_id_with_more_customers(total_of_customers_by_cs_id)
     highest_total_of_customers_scores = total_of_customers_by_cs_id[cs_id_with_more_customers]
 
-    return 0 if highest_total_of_customers_scores.zero? ||
+    return 0 if cs_id_with_more_customers.nil? ||
+                highest_total_of_customers_scores.zero? ||
                 draw_between_cs?(total_of_customers_by_cs_id, highest_total_of_customers_scores)
 
     cs_id_with_more_customers
